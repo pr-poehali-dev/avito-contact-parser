@@ -1,0 +1,15 @@
+{
+  "tests": [
+    {
+      "name": "Get parsings for user",
+      "method": "GET",
+      "path": "/?user_id=1",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "parsings": "array",
+        "total": "number"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface PricingSettings {
   enabled: boolean;
@@ -22,7 +23,37 @@ const Index = () => {
     enabled: false,
     price: 99,
   });
+  const [stats, setStats] = useState({ total_parsings: 0, today_parsings: 0, total_revenue: 0 });
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const userId = 1;
+
+  useEffect(() => {
+    fetchPricingSettings();
+    if (isAdminMode) {
+      fetchStats();
+    }
+  }, [isAdminMode]);
+
+  const fetchPricingSettings = async () => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/98ba991a-11cd-4038-9071-2dc57d80506a');
+      const data = await response.json();
+      setPricingSettings({ enabled: data.enabled, price: data.price });
+    } catch (error) {
+      console.error('Error fetching pricing:', error);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/84745f53-8258-4a60-89f6-715cba449803');
+      const data = await response.json();
+      setStats(data);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
 
   const handleParse = async () => {
     if (!avitoUrl.trim()) {
@@ -36,28 +67,91 @@ const Index = () => {
 
     setIsLoading(true);
     
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: 'Успешно!',
-        description: 'Контакты извлечены и сохранены',
+    try {
+      const response = await fetch('https://functions.poehali.dev/c7148b16-3ad0-4032-a1be-3a138741c37a', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          avito_url: avitoUrl,
+          user_id: userId,
+        }),
       });
-      setAvitoUrl('');
-    }, 2000);
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast({
+          title: 'Успешно!',
+          description: `Контакты извлечены: ${data.contact.name}${data.price_paid > 0 ? ` (${data.price_paid} ₽)` : ''}`,
+        });
+        setAvitoUrl('');
+        
+        setTimeout(() => {
+          navigate('/cabinet');
+        }, 1500);
+      } else {
+        toast({
+          title: 'Ошибка',
+          description: data.error || 'Не удалось выполнить парсинг',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Ошибка подключения к серверу',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handlePricingUpdate = () => {
-    toast({
-      title: 'Настройки сохранены',
-      description: pricingSettings.enabled 
-        ? `Парсинг теперь платный: ${pricingSettings.price} ₽` 
-        : 'Парсинг теперь бесплатный',
-    });
+  const handlePricingUpdate = async () => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/98ba991a-11cd-4038-9071-2dc57d80506a', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          enabled: pricingSettings.enabled,
+          price: pricingSettings.price,
+        }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Настройки сохранены',
+          description: pricingSettings.enabled 
+            ? `Парсинг теперь платный: ${pricingSettings.price} ₽` 
+            : 'Парсинг теперь бесплатный',
+        });
+        fetchStats();
+      }
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось сохранить настройки',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50">
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate('/cabinet')}
+          className="gap-2"
+        >
+          <Icon name="User" size={16} />
+          Личный кабинет
+        </Button>
         <Button
           variant="ghost"
           size="sm"
@@ -299,16 +393,16 @@ const Index = () => {
 
               <div className="grid grid-cols-3 gap-4 pt-4">
                 <div className="p-4 bg-purple-50 rounded-lg text-center">
-                  <p className="text-3xl font-bold text-purple-900">127</p>
+                  <p className="text-3xl font-bold text-purple-900">{stats.total_parsings}</p>
                   <p className="text-sm text-purple-700 mt-1">Всего парсингов</p>
                 </div>
                 <div className="p-4 bg-pink-50 rounded-lg text-center">
-                  <p className="text-3xl font-bold text-pink-900">43</p>
+                  <p className="text-3xl font-bold text-pink-900">{stats.today_parsings}</p>
                   <p className="text-sm text-pink-700 mt-1">Сегодня</p>
                 </div>
                 <div className="p-4 bg-orange-50 rounded-lg text-center">
                   <p className="text-3xl font-bold text-orange-900">
-                    {pricingSettings.enabled ? `${pricingSettings.price * 127}` : '0'} ₽
+                    {stats.total_revenue} ₽
                   </p>
                   <p className="text-sm text-orange-700 mt-1">Заработано</p>
                 </div>

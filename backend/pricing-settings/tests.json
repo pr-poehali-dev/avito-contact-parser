@@ -1,0 +1,30 @@
+{
+  "tests": [
+    {
+      "name": "Get pricing settings",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "enabled": "boolean",
+        "price": "number"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Update pricing settings",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "enabled": true,
+        "price": 150
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "enabled": true,
+        "price": 150
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

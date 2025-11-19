@@ -1,0 +1,6 @@
+{
+  "pricing-settings": "https://functions.poehali.dev/98ba991a-11cd-4038-9071-2dc57d80506a",
+  "get-stats": "https://functions.poehali.dev/84745f53-8258-4a60-89f6-715cba449803",
+  "get-parsings": "https://functions.poehali.dev/0d5aee80-2a28-4c5f-a362-990b727cb516",
+  "parse-avito": "https://functions.poehali.dev/c7148b16-3ad0-4032-a1be-3a138741c37a"
+}

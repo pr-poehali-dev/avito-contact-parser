@@ -1,0 +1,16 @@
+{
+  "tests": [
+    {
+      "name": "Get statistics",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "total_parsings": "number",
+        "today_parsings": "number",
+        "total_revenue": "number"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "tests": [
+    {
+      "name": "Parse Avito URL successfully",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "avito_url": "https://www.avito.ru/moskva/kvartiry/1-k._kvartira_35m_315et._1234567890",
+        "user_id": 1
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "parsing_id": "number",
+        "contact": {
+          "name": "string",
+          "phone": "string",
+          "email": "string"
+        }
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Reject invalid URL",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "avito_url": "https://example.com/not-avito",
+        "user_id": 1
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
